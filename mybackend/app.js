@@ -31,12 +31,27 @@ const fileFilter = (req, file, cb) => {
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
     res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
+    if(req.method === 'OPTIONS'){
+      return res.sendStatus(200);
+    }
     next();
   })
 
   app.use('/graphql', graphqlHttp({
     schema: graphqlSchema,
-    rootValue: graphqlResolver
+    rootValue: graphqlResolver,
+    graphiql : true ,
+    customFormatErrorFn(err) {
+      if(!err.originalError){
+        return err;
+      }
+
+      const data = err.originalError.data;
+      const message = err.message || 'an error occured';
+      const code = err.originalError.code || 500;
+
+      return { message : message , status : code , data}
+    }
   }))
 
   app.use((error, req, res, next) => {
@@ -47,7 +62,7 @@ const fileFilter = (req, file, cb) => {
     return res.status(statusCode || 500).json({ error: message, data });
   });
 
-  await mongoose.connect('mongodb+srv://root:iwilldoit@cluster0-rchqq.mongodb.net/project2?retryWrites=true&w=majority', { useNewUrlParser: true, useUnifiedTopology: true });
+  await mongoose.connect('mongodb+srv://root:iwilldoit@cluster0-rchqq.mongodb.net/project3?retryWrites=true&w=majority', { useNewUrlParser: true, useUnifiedTopology: true });
 
   app.listen(8080);
 
