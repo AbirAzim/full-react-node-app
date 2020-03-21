@@ -4,6 +4,8 @@ const validator = require('validator');
 
 const User = require('../models/user');
 
+const jwt = require('jsonwebtoken');
+
 module.exports = {
     createUser : async function( { userInput } , req ) {
 
@@ -46,5 +48,30 @@ module.exports = {
         const createdUser = await user.save();
 
         return {...createdUser._doc , _id: createdUser._id.toString()}
+    },
+
+    login  : async function({email , password}) {
+        const user = await User.findOne({email : email});
+
+        if(!user){
+            const error = new Error('User Not Found !');
+            error.code = 401;
+            throw error;
+        }
+
+        const isPasswordMatch = await bcrypt.compare(password , user.password);
+
+        if(!isPasswordMatch){
+            const error = new Error('Password Not Matching !');
+            error.code = 401;
+            throw error;
+        }
+
+        const token = jwt.sign({
+            userId : user._id.toString(),
+            email : user.email
+        }, 'mysecretmessage' , { expiresIn : '2h'})
+
+        return { token , userId : user._id.toString() }
     }
 }

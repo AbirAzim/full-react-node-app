@@ -33,8 +33,13 @@ module.exports = buildSchema(`
         createUser( userInput :  userInputData ) : User!
     }
 
+    type AuthData {
+        token : String!
+        userId : String!
+    }
+
     type RootQuery {
-        hello: String
+        login(email : String! , password : String!) : AuthData!
     }
 
     schema {
