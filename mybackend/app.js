@@ -2,6 +2,10 @@ const express = require("express");
 const mongoose = require("mongoose");
 const path = require("path");
 const multer = require("multer");
+const graphqlHttp = require('express-graphql');
+
+const graphqlSchema = require('./graphql/schema');
+const graphqlResolver = require('./graphql/resolver');
 
 const app = express();
 
@@ -30,9 +34,10 @@ const fileFilter = (req, file, cb) => {
     next();
   })
 
-  app.use("/feed", require("./routes/feed"));
-  app.use("/auth", require("./routes/auth"));
-  app.use("/users", require("./routes/user"));
+  app.use('/graphql', graphqlHttp({
+    schema: graphqlSchema,
+    rootValue: graphqlResolver
+  }))
 
   app.use((error, req, res, next) => {
     console.log(error);
@@ -44,13 +49,7 @@ const fileFilter = (req, file, cb) => {
 
   await mongoose.connect('mongodb+srv://root:iwilldoit@cluster0-rchqq.mongodb.net/project2?retryWrites=true&w=majority', { useNewUrlParser: true, useUnifiedTopology: true });
 
-  const server = app.listen(8080);
-
-  const io = require('./socket').init(server);
-  
-  io.on('connection', socket => {
-    console.log('clint connected');
-  })
+  app.listen(8080);
 
 })();
 
